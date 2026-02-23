@@ -4,8 +4,6 @@ const josefinSans = Josefin_Sans({
   display: "swap",
 });
 
-import Logo from "@/app/_components/Logo";
-import Navigation from "@/app/_components/Navigation";
 import "@/app/_styles/globals.css";
 import Header from "./_components/Header";
 
@@ -26,8 +24,8 @@ export default function RootLayout({ children }) {
       >
         <Header />
 
-        <div className="flex-1 px-8 py-12">
-          <main className="max-w-7xl mx-auto">{children}</main>
+        <div className="flex-1 px-8 py-12 grid">
+          <main className="max-w-7xl mx-auto w-full ">{children}</main>
         </div>
       </body>
     </html>
