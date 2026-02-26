@@ -6,10 +6,28 @@
 //   return NextResponse.redirect(new URL("/about", request.url));
 // }
 
-import { auth } from "@/app/_lib/auth";
+import { NextResponse } from "next/server";
+import { auth } from "./app/_lib/auth";
 
-export const middleware = auth;
+export async function middleware(req) {
+  const session = await auth();
+  const { pathname } = req.nextUrl;
+
+  if (pathname === "/login" && session?.user) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  if (pathname.startsWith("/account") && !session?.user) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  if (pathname === "/cabins/thankyou" && !session?.user) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ["/account/:path*"],
+  matcher: ["/login", "/account/:path*", "/cabins/thankyou"],
 };
