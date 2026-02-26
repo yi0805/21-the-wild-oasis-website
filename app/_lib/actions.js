@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { auth, signIn, signOut } from "./auth";
-import { deleteBooking, getBookings, updateGuest } from "./data-service";
+import {
+  deleteBooking,
+  getBookings,
+  updateBooking,
+  updateGuest,
+} from "./data-service";
+import { redirect } from "next/navigation";
 
 export async function signInAction() {
   await signIn("google", { redirectTo: "/account" });
@@ -50,4 +56,29 @@ export async function deleteReservationAction(bookingId) {
 
   await deleteBooking(bookingId);
   revalidatePath("/account/reservations");
+}
+
+export async function updateReservationAction(formData) {
+  const session = await auth();
+  if (!session) {
+    throw new Error("You must be logged in");
+  }
+
+  const updateData = {
+    numGuests: Number(formData.get("numGuests")),
+    observations: formData.get("observations").slice(0, 1000),
+  };
+
+  const bookingid = Number(formData.get("bookingid"));
+
+  const guestBookings = await getBookings(session.user.guestId);
+  const guestBookingIds = guestBookings.map((booking) => booking.id);
+  if (!guestBookingIds.includes(bookingid)) {
+    throw new Error("You are not allowed to update this booking");
+  }
+
+  await updateBooking(bookingid, updateData);
+  revalidatePath("/account/reservations");
+  revalidatePath(`/account/reservations/edit/${bookingid}`);
+  redirect("/account/reservations");
 }
