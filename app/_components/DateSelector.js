@@ -1,9 +1,15 @@
 "use client";
 
-import { isWithinInterval } from "date-fns";
+import {
+  differenceInDays,
+  isPast,
+  isSameDay,
+  isWithinInterval,
+} from "date-fns";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
-import { useReservation } from "./ReservationContext";
+
+import { useReservation } from "@/app/_components/ReservationContext";
 
 function isAlreadyBooked(range, datesArr) {
   return (
@@ -18,30 +24,37 @@ function isAlreadyBooked(range, datesArr) {
 function DateSelector({ bookedDates, settings, cabin }) {
   const { range, setRange, resetRange } = useReservation();
 
-  // CHANGE
-  const regularPrice = 23;
-  const discount = 23;
-  const numNights = 23;
-  const cabinPrice = 23;
+  const displayRange = isAlreadyBooked(range, bookedDates) ? {} : range;
 
-  // SETTINGS
+  const { regularPrice, discount } = cabin;
+  const numNights = differenceInDays(displayRange?.to, displayRange?.from);
+  const cabinPrice = numNights * (regularPrice - discount);
+
   const { minBookingLength, maxBookingLength } = settings;
 
   return (
     <div className="flex flex-col justify-between">
+      <p className="text-center text-2xl font-semibold mt-4 ">
+        Minimum booking length: {minBookingLength + 1} nights
+      </p>
       <DayPicker
         className="pt-12 place-self-center"
         mode="range"
         onSelect={(range) => setRange(range)}
-        selected={range}
+        selected={displayRange}
         min={minBookingLength + 1}
         max={maxBookingLength}
         startMonth={new Date()}
         startDate={new Date()}
         endMonth={new Date(new Date().getFullYear() + 5, 11)}
-        hidden={{ before: new Date() }}
         captionLayout="dropdown"
-        numberOfMonths={2}
+        numberOfMonths={1}
+        disabled={(curDate) => {
+          return (
+            isPast(curDate) ||
+            bookedDates.some((date) => isSameDay(curDate, date))
+          );
+        }}
       />
 
       <div className="flex items-center justify-between px-8 bg-accent-500 text-primary-800 h-[72px]">
